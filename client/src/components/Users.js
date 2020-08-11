@@ -41,6 +41,7 @@ import axios from 'axios'
 import { AppContext } from './MainFrame'
 import pwdGenerator from 'generate-password'
 import dateformat from 'dateformat'
+import { getDateTimeStringLocale } from '../common/locale'
 
 const style = (theme) => ({
   box: {
@@ -193,12 +194,12 @@ function Users(props) {
     setRight(permissions.filter((p) => user.role.some((r) => r === p.id)))
   }
 
-  function handleDelete(user){
+  function handleDelete(user) {
     setUserDelete(user)
   }
 
-  async function handleDeleteConfirm(){
-    if (userDelete.id == user.id){
+  async function handleDeleteConfirm() {
+    if (userDelete.id == user.id) {
       setErrorMessage('Cannot delete active user.')
       return
     }
@@ -222,10 +223,9 @@ function Users(props) {
       console.error(e)
       setErrorMessage('An error occured while deleting user. Please contact the system admin.')
     }
-    
   }
 
-  function handleDeleteCancel(){
+  function handleDeleteCancel() {
     setUserDelete(undefined)
     setErrorMessage('')
   }
@@ -302,7 +302,7 @@ function Users(props) {
       </List>
     </Paper>
   )
- async function handleSave() {
+  async function handleSave() {
     if (userEditing.userName === '' || right === undefined || right.length === 0) {
       setErrorMessage('Missing Field')
       return
@@ -427,6 +427,10 @@ function Users(props) {
     setCopyMsg('Copied!')
   }
 
+  const handleError = (userEditing, key) => {
+    return userEditing && userEditing[key] && /\s/.test(userEditing[key]) ? true : false
+  }
+
   function mapSortedUsrs(users, option = 'id') {
     const sortedUsrs = users.sort((a, b) => a[option] - b[option])
     return mapUsrs(sortedUsrs)
@@ -450,7 +454,7 @@ function Users(props) {
           ))}
         </TableCell>
         <TableCell component="th" scope="row">
-          {dateformat(user.createdAt, 'm/d/yyyy h:MMtt')}
+          {getDateTimeStringLocale(user.createdAt)}
         </TableCell>
         <TableCell>
           <IconButton title="edit" onClick={() => handleEdit(user)}>
@@ -555,6 +559,8 @@ function Users(props) {
             }}
             disabled={userEditing && userEditing.id !== undefined ? true : false}
             value={(userEditing && userEditing.userName) || ''}
+            error={handleError(userEditing, ['userName'])}
+            helperText={handleError(userEditing, ['userName']) ? 'No space allowed' : ''}
             className={classes.input}
             onChange={handleUsernameChange}
           />
@@ -613,7 +619,7 @@ function Users(props) {
               </Grid>
               <Grid item>
                 <Typography variant="outline">
-                  {userEditing && dateformat(userEditing.createdAt, 'm/d/yyyy h:MMtt')}
+                  {userEditing && getDateTimeStringLocale(userEditing.createdAt)}
                 </Typography>
               </Grid>
             </Grid>
@@ -761,15 +767,11 @@ function Users(props) {
           </Grid>
         </DialogContent>
         <DialogActions>
-          <Typography color="error">
-            {errorMessage}
-          </Typography>
+          <Typography color="error">{errorMessage}</Typography>
           <Button onClick={handleDeleteCancel} variant="contained" color="primary">
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirm}>
-            Delete
-          </Button>
+          <Button onClick={handleDeleteConfirm}>Delete</Button>
         </DialogActions>
       </Dialog>
       <Dialog open={isPermissionsShow} onClose={handleClose} aria-labelledby="form-dialog-title">
